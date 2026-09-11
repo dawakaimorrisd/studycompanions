@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<title>Study Companion</title>
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<link rel="icon" href="/icons/icon-192.png" />
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+		<meta name="theme-color" content="#4c6bff" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="Study Companion" />
+		<script>
+			// Applied before first paint so there's no flash of the wrong
+			// theme - src/lib/stores/theme.svelte.ts owns this afterwards.
+			try {
+				var pref = localStorage.getItem('sc_theme');
+				var dark =
+					pref === 'dark' ||
+					(pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+				if (dark) document.documentElement.classList.add('dark');
+			} catch (e) {}
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

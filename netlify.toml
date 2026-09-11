@@ -1,0 +1,4 @@
+[build]
+  base = "study-companion"
+  command = "npm run build"
+  publish = "build"

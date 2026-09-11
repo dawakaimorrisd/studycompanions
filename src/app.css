@@ -1,0 +1,205 @@
+@import 'tailwindcss';
+
+/* Self-hosted (not a Google Fonts <link>) so the offline/PWA build still
+   renders correctly with no network. See docs/OFFLINE_PWA.md. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/bricolage-grotesque/500.css';
+@import '@fontsource/bricolage-grotesque/600.css';
+
+/* Manual dark mode: a `dark` class on <html>, toggled by
+   src/lib/stores/theme.svelte.ts and defaulted from prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--font-sans:
+		'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	/* Display face - used sparingly: wordmark, big score numbers, chapter
+	   titles, empty-state headlines. Never for buttons/nav/body copy. */
+	--font-display: 'Bricolage Grotesque', var(--font-sans);
+	/* Data face - student/course codes, scores, timestamps. */
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+	/* Neutral ramp ("ink" at 900, "paper" at 50) - both light and dark
+	   values live here as plain hex; .dark below overrides the same
+	   custom properties so every existing gray-* utility in the app
+	   becomes dark-mode-aware with no per-component changes. */
+	--color-gray-50: #f1f3f6;
+	--color-gray-100: #e7e9ed;
+	--color-gray-200: #dadde3;
+	--color-gray-300: #c7cbd4;
+	--color-gray-400: #9ba1ac;
+	--color-gray-500: #6b7280;
+	--color-gray-600: #52565f;
+	--color-gray-700: #383c44;
+	--color-gray-800: #24262c;
+	--color-gray-900: #171a21;
+
+	/* Card/panel surface - distinct from the gray-50 page background so a
+	   card still reads as "raised" in dark mode. */
+	--color-surface: #ffffff;
+
+	/* Student brand - signal indigo. */
+	--color-brand-50: #eef0fe;
+	--color-brand-100: #dde1fd;
+	--color-brand-200: #c2c9fb;
+	--color-brand-300: #9ba6f8;
+	--color-brand-400: #6c79f4;
+	--color-brand-500: #3b4df0;
+	--color-brand-600: #2e3ed1;
+	--color-brand-700: #2531ac;
+	--color-brand-800: #1f2889;
+	--color-brand-900: #1c2470;
+
+	/* Instructor brand - field green. */
+	--color-instructor-50: #effbf4;
+	--color-instructor-100: #d7f5e4;
+	--color-instructor-200: #b0eacb;
+	--color-instructor-300: #7dd8ac;
+	--color-instructor-400: #52bf8b;
+	--color-instructor-500: #319d67;
+	--color-instructor-600: #237e52;
+	--color-instructor-700: #1e6544;
+	--color-instructor-800: #1b5138;
+	--color-instructor-900: #17432f;
+
+	--color-red-50: #fef2f2;
+	--color-red-100: #fee2e2;
+	--color-red-200: #fecaca;
+	--color-red-300: #fca5a5;
+	--color-red-500: #ef4444;
+	--color-red-600: #dc2626;
+	--color-red-700: #b91c1c;
+	--color-red-800: #991b1b;
+
+	--color-amber-50: #fffbeb;
+	--color-amber-100: #fef3c7;
+	--color-amber-200: #fde68a;
+	--color-amber-500: #f59e0b;
+	--color-amber-700: #b45309;
+	--color-amber-800: #92400e;
+
+	/* Signature accent - reveal moments only (a released test score, a
+	   finished drill's correct answers). A literal highlighter color;
+	   text on it always uses the ink stop below for contrast in both
+	   modes, never plain black/white. */
+	--color-highlighter-300: #ffe066;
+	--color-highlighter-400: #ffd400;
+	--color-highlighter-ink: #171a21;
+
+	/* Engagement badges (My Students dashboard) */
+	--color-engaged: #1f9d55;
+	--color-moderate: #b7791f;
+	--color-at-risk: #c0362c;
+}
+
+.dark {
+	--color-gray-50: #14161b;
+	--color-gray-100: #1b1e24;
+	--color-gray-200: #262a32;
+	--color-gray-300: #343940;
+	--color-gray-400: #7a808c;
+	--color-gray-500: #9ba1ac;
+	--color-gray-600: #b7bcc6;
+	--color-gray-700: #dde0e5;
+	--color-gray-800: #eceef1;
+	--color-gray-900: #f5f6f8;
+
+	--color-surface: #1d2027;
+
+	--color-brand-50: #171b3d;
+	--color-brand-100: #1e234d;
+	--color-brand-200: #262c63;
+	--color-brand-300: #333b82;
+	--color-brand-400: #5a64c9;
+	--color-brand-500: #6c79f4;
+	--color-brand-600: #7c87f5;
+	--color-brand-700: #a9b1fa;
+	--color-brand-800: #c2c9fb;
+	--color-brand-900: #dde1fd;
+
+	--color-instructor-50: #10241a;
+	--color-instructor-100: #163024;
+	--color-instructor-200: #1d4030;
+	--color-instructor-300: #2a5a42;
+	--color-instructor-400: #3f8f68;
+	--color-instructor-500: #4cc98a;
+	--color-instructor-600: #5ad89a;
+	--color-instructor-700: #86e6b4;
+	--color-instructor-800: #b0efcd;
+	--color-instructor-900: #d7f5e4;
+
+	--color-red-50: #2a1414;
+	--color-red-100: #3a1b1b;
+	--color-red-200: #4d2323;
+	--color-red-300: #6b2e2e;
+	--color-red-500: #f87171;
+	--color-red-600: #f87171;
+	--color-red-700: #fca5a5;
+	--color-red-800: #fecaca;
+
+	--color-amber-50: #2a2210;
+	--color-amber-100: #3a2e14;
+	--color-amber-200: #4d3d1c;
+	--color-amber-500: #fbbf24;
+	--color-amber-700: #fcd34d;
+	--color-amber-800: #fde68a;
+
+	--color-engaged: #4cc98a;
+	--color-moderate: #fbbf24;
+	--color-at-risk: #f87171;
+
+	color-scheme: dark;
+}
+
+html {
+	font-family: var(--font-sans);
+}
+
+/* A visible, consistent focus ring everywhere - buttons, links, inputs,
+   cards - rather than relying on each component to draw its own. */
+:focus-visible {
+	outline: 2px solid var(--color-brand-500);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+	}
+}
+
+/* The signature moment: a highlighter stroke sweeping in behind a
+   revealed correct answer. Used by McqQuestion only - restrained to that
+   one place so it stays a signature, not wallpaper. */
+@keyframes highlighter-sweep {
+	from {
+		background-size: 0% 100%;
+	}
+	to {
+		background-size: 100% 100%;
+	}
+}
+
+.highlighter-reveal {
+	background-image: linear-gradient(var(--color-highlighter-400), var(--color-highlighter-400));
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	animation: highlighter-sweep 0.4s ease-out forwards;
+}
+
+/* Mono digits for scores, so a count-up doesn't jitter in width as digits
+   change. */
+.font-mono-nums {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+}
