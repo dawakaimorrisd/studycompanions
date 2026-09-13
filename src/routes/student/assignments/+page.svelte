@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { getStudentHome } from '$lib/api/content';
 	import type { StudentHomeContent } from '$lib/types';
 
@@ -13,9 +13,13 @@
 	let content = $state<StudentHomeContent | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let initialLoadComplete = $state(false);
 
-	async function load() {
-		loading = true;
+	async function load(showLoading = true) {
+		if (showLoading) {
+			loading = true;
+		}
+
 		error = null;
 
 		try {
@@ -30,7 +34,15 @@
 	}
 
 	$effect(() => {
-		load();
+		load().then(() => {
+			initialLoadComplete = true;
+		});
+	});
+
+	afterNavigate(() => {
+		if (initialLoadComplete) {
+			load(false);
+		}
 	});
 </script>
 
@@ -65,7 +77,7 @@
 			<button
 				type="button"
 				class="mt-1 font-medium underline underline-offset-2"
-				onclick={load}
+				onclick={() => load()}
 			>
 				Retry
 			</button>
@@ -81,8 +93,11 @@
 							<p class="truncate font-medium text-gray-900">
 								{assignment.title}
 							</p>
+
 							{#if assignment.type}
-								<span class="flex shrink-0 items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+								<span
+									class="flex shrink-0 items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+								>
 									{#if assignment.type === 'GROUP'}
 										<Users size={10} aria-hidden="true" />
 										Group
@@ -99,7 +114,10 @@
 						</p>
 					</a>
 
-					<a href={`/student/assignments/${assignment.id}`} aria-label={`Open ${assignment.title}`}>
+					<a
+						href={`/student/assignments/${assignment.id}`}
+						aria-label={`Open ${assignment.title}`}
+					>
 						<ArrowRight
 							size={18}
 							class="ml-4 shrink-0 text-gray-300 transition group-hover:translate-x-1 group-hover:text-gray-700"

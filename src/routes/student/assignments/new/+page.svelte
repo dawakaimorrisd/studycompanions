@@ -5,12 +5,12 @@
 	// work into the app's only record of it: pick the course, describe
 	// what it is, upload it. That single action creates both the
 	// assignment and the submission at once.
-	//
-	// Calls createMyAssignment() / getCourseEligibleGroupMembers(), which
-	// hit endpoints that don't exist yet - see api/submissions.ts and the
-	// backend handoff doc's "Student-originated homework" section.
+
 	import { goto } from '$app/navigation';
-	import { createMyAssignment, getCourseEligibleGroupMembers } from '$lib/api/submissions';
+	import {
+		createMyAssignment,
+		getCourseEligibleGroupMembers
+	} from '$lib/api/submissions';
 	import { ApiError } from '$lib/api/client';
 	import { studentCourses } from '$lib/stores/student-courses.svelte';
 	import type { AssignmentType, StudentPickable } from '$lib/types';
@@ -43,17 +43,23 @@
 	let submitting = $state(false);
 
 	$effect(() => {
-		if (courseId && type === 'GROUP') loadMembers(courseId);
+		if (courseId && type === 'GROUP') {
+			loadMembers(courseId);
+		}
 	});
 
 	async function loadMembers(id: string) {
 		membersLoading = true;
 		membersError = null;
+
 		try {
 			const res = await getCourseEligibleGroupMembers(id);
 			members = res.students;
 		} catch (err) {
-			membersError = err instanceof ApiError ? err.message : 'Could not load eligible classmates.';
+			membersError =
+				err instanceof ApiError
+					? err.message
+					: 'Could not load eligible classmates.';
 		} finally {
 			membersLoading = false;
 		}
@@ -61,8 +67,13 @@
 
 	function toggleMember(id: string) {
 		const next = new Set(selectedMemberIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
+
+		if (next.has(id)) {
+			next.delete(id);
+		} else {
+			next.add(id);
+		}
+
 		selectedMemberIds = next;
 	}
 
@@ -74,16 +85,19 @@
 			validationError = 'Choose which course this is for.';
 			return;
 		}
+
 		if (!file) {
 			validationError = 'Choose a file to upload.';
 			return;
 		}
+
 		if (type === 'GROUP' && groupName.trim().length === 0) {
 			validationError = 'Give your group a name.';
 			return;
 		}
 
 		submitting = true;
+
 		try {
 			const res = await createMyAssignment({
 				courseId,
@@ -91,11 +105,22 @@
 				type,
 				file,
 				groupName: type === 'GROUP' ? groupName.trim() : undefined,
-				memberStudentIds: type === 'GROUP' ? Array.from(selectedMemberIds) : undefined
+				memberStudentIds:
+					type === 'GROUP'
+						? Array.from(selectedMemberIds)
+						: undefined
 			});
+
+			// The assignment has been created immediately.
+			// PDF conversion and AI generation continue in the background.
+			// Go directly to the assignment detail page, which polls for
+			// processingStatus and updates automatically when ready.
 			await goto(`/student/assignments/${res.assignmentId}`);
 		} catch (err) {
-			submitError = err instanceof ApiError ? err.message : 'Could not submit this.';
+			submitError =
+				err instanceof ApiError
+					? err.message
+					: 'Could not submit this.';
 		} finally {
 			submitting = false;
 		}
@@ -107,7 +132,11 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">
-	<AppHeader title="Submit Homework" backHref="/student/assignments" backLabel="My Homework" />
+	<AppHeader
+		title="Submit Homework"
+		backHref="/student/assignments"
+		backLabel="My Homework"
+	/>
 
 	<main class="mx-auto max-w-xl px-4 py-8 sm:px-6">
 		<div class="rounded-xl border border-gray-200 bg-surface p-5">
@@ -115,14 +144,28 @@
 				<SelectField
 					label="Course"
 					bind:value={courseId}
-					options={studentCourses.courses.map((c) => ({ value: c.id, label: `${c.name} (${c.courseCode})` }))}
-					placeholder={studentCourses.loading ? 'Loading courses…' : 'Choose a course'}
+					options={studentCourses.courses.map((c) => ({
+						value: c.id,
+						label: `${c.name} (${c.courseCode})`
+					}))}
+					placeholder={
+						studentCourses.loading
+							? 'Loading courses…'
+							: 'Choose a course'
+					}
 				/>
 
-				<TextField label="Title (optional)" bind:value={title} placeholder="e.g. Chapter 4 problem set" />
+				<TextField
+					label="Title (optional)"
+					bind:value={title}
+					placeholder="e.g. Chapter 4 problem set"
+				/>
 
 				<div>
-					<p class="mb-1.5 text-sm font-medium text-gray-700">Submitting as</p>
+					<p class="mb-1.5 text-sm font-medium text-gray-700">
+						Submitting as
+					</p>
+
 					<SegmentedToggle
 						options={[
 							{ label: 'Just me', value: 'INDIVIDUAL' },
@@ -133,18 +176,33 @@
 				</div>
 
 				{#if type === 'GROUP'}
-					<TextField label="Group name" bind:value={groupName} placeholder="e.g. Team Alpha" />
+					<TextField
+						label="Group name"
+						bind:value={groupName}
+						placeholder="e.g. Team Alpha"
+					/>
 
 					<div>
-						<p class="mb-1.5 text-sm font-medium text-gray-700">Group members</p>
+						<p class="mb-1.5 text-sm font-medium text-gray-700">
+							Group members
+						</p>
+
 						{#if !courseId}
-							<p class="text-sm text-gray-500">Choose a course first.</p>
+							<p class="text-sm text-gray-500">
+								Choose a course first.
+							</p>
 						{:else if membersLoading}
-							<p class="text-sm text-gray-500">Loading classmates…</p>
+							<p class="text-sm text-gray-500">
+								Loading classmates…
+							</p>
 						{:else if membersError}
-							<p class="text-sm text-red-600">{membersError}</p>
+							<p class="text-sm text-red-600">
+								{membersError}
+							</p>
 						{:else if members.length === 0}
-							<p class="text-sm text-gray-500">No eligible classmates found.</p>
+							<p class="text-sm text-gray-500">
+								No eligible classmates found.
+							</p>
 						{:else}
 							<div class="flex flex-col gap-1.5">
 								{#each members as member (member.id)}
@@ -157,8 +215,14 @@
 											checked={selectedMemberIds.has(member.id)}
 											onchange={() => toggleMember(member.id)}
 										/>
-										<span class="text-sm text-gray-900">{member.name}</span>
-										<span class="text-xs text-gray-400">{member.studentCode}</span>
+
+										<span class="text-sm text-gray-900">
+											{member.name}
+										</span>
+
+										<span class="text-xs text-gray-400">
+											{member.studentCode}
+										</span>
 									</label>
 								{/each}
 							</div>
@@ -166,16 +230,26 @@
 					</div>
 				{/if}
 
-				<FileField label="File" bind:file accept=".pdf,.docx" />
+				<FileField
+					label="File"
+					bind:file
+					accept=".pdf,.docx"
+				/>
 
 				{#if validationError}
 					<FormError message={validationError} />
 				{/if}
+
 				{#if submitError}
 					<FormError message={submitError} />
 				{/if}
 
-				<Button loading={submitting} onclick={handleSubmit}>Submit</Button>
+				<Button
+					loading={submitting}
+					onclick={handleSubmit}
+				>
+					Submit
+				</Button>
 			</div>
 		</div>
 	</main>

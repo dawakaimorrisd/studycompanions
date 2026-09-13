@@ -152,11 +152,16 @@
 		</div>
 
 		<div class="mt-6 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-surface p-5">
-			<p class="flex items-center gap-2 text-sm text-gray-600">
-				<CheckCircle2 size={18} class="text-instructor-500" aria-hidden="true" />
-				Submitted {new Date(assignment.createdAt).toLocaleDateString()}
-			</p>
-			<a
+		<p class="flex items-center gap-2 text-sm text-gray-600">
+	 <CheckCircle2 size={18} class="text-instructor-500" aria-hidden="true" />
+	 Submitted {new Date(assignment.submittedAt).toLocaleString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: '2-digit'
+	})}
+</p>
+		<a
 				href={`/instructor/courses/${courseId}/assignments/${assignmentId}/submissions`}
 				class="shrink-0 text-sm font-medium text-instructor-700 hover:text-instructor-800"
 			>

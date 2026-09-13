@@ -408,6 +408,7 @@ export interface ReceivedDistribution {
 export interface MySubmission {
 	id: string;
 	type: AssignmentType;
+	processingStatus: 'PROCESSING' | 'READY' | 'FAILED';
 	groupName: string | null;
 	submittedBy: StudentPickable;
 	/** Tagged group members - empty for INDIVIDUAL. */
