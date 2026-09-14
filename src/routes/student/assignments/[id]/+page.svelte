@@ -1,4 +1,3 @@
-
 <script lang="ts">
 	// Student-originated homework: this assignment IS a submission (yours,
 	// or one you're tagged in as a group member) - there's no separate
@@ -10,8 +9,10 @@
 	// in the backend handoff. Drill and Dictionary work off the generated
 	// questionUnits, same as before. Share is new here: folded in from
 	// the old separate /submit page now that submission happens at
-	// creation time (see /student/assignments/new) instead of after the
-	// fact - only shown to the creator (`isSubmitter`) of a GROUP homework.
+	// creation time (see /student/assignments/new) instead of after
+	// the fact - only shown to the creator (`isSubmitter`) of a GROUP
+	// homework.
+
 	import { page } from '$app/state';
 	import { getAssignment } from '$lib/api/content';
 	import {
@@ -52,10 +53,54 @@
 
 	let drillActive = $state(false);
 
+	// Background polling for the worker-based PDF/generation process.
+	let processingTimer: ReturnType<typeof setTimeout> | null = null;
+
 	type Tab = 'read' | 'drill' | 'dictionary' | 'share';
 	let activeTab = $state<Tab>('read');
 
+	function stopProcessingPolling() {
+		if (processingTimer) {
+			clearTimeout(processingTimer);
+			processingTimer = null;
+		}
+	}
+
+	async function pollProcessingStatus(id: string) {
+		if (usingOfflineCopy) return;
+
+		try {
+			const [assignmentRes, submissionRes] = await Promise.all([
+				getAssignment(id),
+				getMySubmission(id)
+			]);
+
+			assignment = assignmentRes;
+			mySubmission = submissionRes.submission;
+			drillActive = Boolean(assignment.drills?.inProgressAttemptId);
+
+			const status = submissionRes.submission?.processingStatus;
+
+			if (status === 'PROCESSING') {
+				processingTimer = setTimeout(() => {
+					void pollProcessingStatus(id);
+				}, 2000);
+			} else {
+				// READY or FAILED - the worker has finished.
+				stopProcessingPolling();
+			}
+		} catch {
+			// A temporary polling failure should not destroy the page state.
+			// Retry shortly and keep displaying the current assignment.
+			processingTimer = setTimeout(() => {
+				void pollProcessingStatus(id);
+			}, 3000);
+		}
+	}
+
 	async function load(id: string) {
+		stopProcessingPolling();
+
 		loading = true;
 		error = null;
 		assignment = null;
@@ -73,6 +118,16 @@
 			assignment = assignmentRes;
 			mySubmission = submissionRes.submission;
 			drillActive = Boolean(assignment.drills?.inProgressAttemptId);
+
+			// The assignment is processed asynchronously by the backend worker.
+			// Start silent polling only while processing is still underway.
+			if (
+				submissionRes.submission?.processingStatus === 'PROCESSING'
+			) {
+				processingTimer = setTimeout(() => {
+					void pollProcessingStatus(id);
+				}, 2000);
+			}
 		} catch (err) {
 			const cached = downloads.get('assignment', id);
 
@@ -81,7 +136,10 @@
 				usingOfflineCopy = true;
 				drillActive = Boolean(assignment.drills?.inProgressAttemptId);
 			} else {
-				error = err instanceof ApiError ? err.message : 'Could not load this assignment.';
+				error =
+					err instanceof ApiError
+						? err.message
+						: 'Could not load this assignment.';
 			}
 		} finally {
 			loading = false;
@@ -91,6 +149,10 @@
 	$effect(() => {
 		load(assignmentId);
 		activeTab = 'read';
+
+		return () => {
+			stopProcessingPolling();
+		};
 	});
 
 	// Same UX as the old ContentReader gating: once a drill attempt is in
@@ -149,7 +211,8 @@
 			mySubmission = {
 				...mySubmission,
 				generatedAt: res.generatedAt,
-				questionUnits: res.questionUnits
+				questionUnits: res.questionUnits,
+				processingStatus: 'READY'
 			};
 
 			if (assignment) {
@@ -318,6 +381,32 @@
 			{#if usingOfflineCopy}
 				<div class="mb-4">
 					<Badge tone="brand">Viewing your downloaded offline copy</Badge>
+				</div>
+			{/if}
+
+			{#if mySubmission?.processingStatus === 'PROCESSING'}
+				<div class="mb-4 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
+					<div class="flex items-center gap-2">
+						<div
+							class="h-4 w-4 animate-spin rounded-full border-2 border-brand-300 border-t-brand-700"
+							aria-hidden="true"
+						></div>
+						<span>
+							Your homework is being processed. The PDF and study material will appear
+							automatically when they're ready.
+						</span>
+					</div>
+				</div>
+			{/if}
+
+			{#if mySubmission?.processingStatus === 'FAILED'}
+				<div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+					Your homework processing could not be completed.
+					{#if mySubmission.generationError}
+						<span>{mySubmission.generationError}</span>
+					{:else if mySubmission.pdfConversionError}
+						<span>{mySubmission.pdfConversionError}</span>
+					{/if}
 				</div>
 			{/if}
 
@@ -553,4 +642,3 @@
 		{/if}
 	</main>
 </div>
-
